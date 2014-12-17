@@ -969,7 +969,7 @@ QSlider::handle:horizontal {
      <x>0</x>
      <y>0</y>
      <width>580</width>
-     <height>23</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -1175,32 +1175,20 @@ QSlider::handle:horizontal {
    <property name="text">
     <string>&amp;New Player</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+N</string>
-   </property>
   </action>
   <action name="action_Open_File">
    <property name="text">
     <string>&amp;Open File...</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+O</string>
    </property>
   </action>
   <action name="actionOpen_URL">
    <property name="text">
     <string>Open &amp;URL...</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+U</string>
-   </property>
   </action>
   <action name="actionOpen_Path_from_Clipboard">
    <property name="text">
     <string>Open Path from &amp;Clipboard</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+V</string>
    </property>
   </action>
   <action name="actionOpen_Last_File">
@@ -1221,9 +1209,6 @@ QSlider::handle:horizontal {
    <property name="text">
     <string>Show in &amp;Folder</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+F</string>
-   </property>
   </action>
   <action name="actionPlay_Next_File">
    <property name="enabled">
@@ -1231,9 +1216,6 @@ QSlider::handle:horizontal {
    </property>
    <property name="text">
     <string>Play &amp;Next File</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Right</string>
    </property>
   </action>
   <action name="actionPlay_Previous_File">
@@ -1243,16 +1225,10 @@ QSlider::handle:horizontal {
    <property name="text">
     <string>Play &amp;Previous File</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+Left</string>
-   </property>
   </action>
   <action name="actionE_xit">
    <property name="text">
     <string>E&amp;xit</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Q</string>
    </property>
   </action>
   <action name="action_Full_Screen">
@@ -1261,9 +1237,6 @@ QSlider::handle:horizontal {
    </property>
    <property name="text">
     <string>&amp;Full Screen</string>
-   </property>
-   <property name="shortcut">
-    <string>Alt+Return</string>
    </property>
    <property name="shortcutContext">
     <enum>Qt::WindowShortcut</enum>
@@ -1279,9 +1252,6 @@ QSlider::handle:horizontal {
    <property name="text">
     <string>Show S&amp;ubtitles</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+W</string>
-   </property>
   </action>
   <action name="actionMedia_Info">
    <property name="enabled">
@@ -1289,9 +1259,6 @@ QSlider::handle:horizontal {
    </property>
    <property name="text">
     <string>Media &amp;Info</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+I</string>
    </property>
   </action>
   <action name="action_Play">
@@ -1301,9 +1268,6 @@ QSlider::handle:horizontal {
    <property name="text">
     <string>&amp;Play</string>
    </property>
-   <property name="shortcut">
-    <string>Space</string>
-   </property>
   </action>
   <action name="action_Stop">
    <property name="enabled">
@@ -1312,9 +1276,6 @@ QSlider::handle:horizontal {
    <property name="text">
     <string>&amp;Stop</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+S</string>
-   </property>
   </action>
   <action name="action_Restart">
    <property name="enabled">
@@ -1322,9 +1283,6 @@ QSlider::handle:horizontal {
    </property>
    <property name="text">
     <string>&amp;Restart</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+R</string>
    </property>
   </action>
   <action name="actionSh_uffle">
@@ -1372,9 +1330,6 @@ QSlider::handle:horizontal {
    <property name="text">
     <string>&amp;Next Chapter</string>
    </property>
-   <property name="shortcut">
-    <string>PgDown</string>
-   </property>
   </action>
   <action name="action_Previous_Chapter">
    <property name="enabled">
@@ -1382,9 +1337,6 @@ QSlider::handle:horizontal {
    </property>
    <property name="text">
     <string>&amp;Previous Chapter</string>
-   </property>
-   <property name="shortcut">
-    <string>PgUp</string>
    </property>
   </action>
   <action name="action_Frame_Step">
@@ -1394,9 +1346,6 @@ QSlider::handle:horizontal {
    <property name="text">
     <string>&amp;Frame Step</string>
    </property>
-   <property name="shortcut">
-    <string>Shift+Right</string>
-   </property>
   </action>
   <action name="actionFrame_Back_Step">
    <property name="enabled">
@@ -1405,9 +1354,6 @@ QSlider::handle:horizontal {
    <property name="text">
     <string>Frame &amp;Back Step</string>
    </property>
-   <property name="shortcut">
-    <string>Shift+Left</string>
-   </property>
   </action>
   <action name="action_Jump_to_Time">
    <property name="enabled">
@@ -1415,9 +1361,6 @@ QSlider::handle:horizontal {
    </property>
    <property name="text">
     <string>&amp;Jump to Time...</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+J</string>
    </property>
   </action>
   <action name="action_Show_Playlist">
@@ -1429,9 +1372,6 @@ QSlider::handle:horizontal {
    </property>
    <property name="text">
     <string>&amp;Show Playlist</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+X</string>
    </property>
   </action>
   <action name="action_Hide_Album_Art">
@@ -1452,9 +1392,6 @@ QSlider::handle:horizontal {
    <property name="text">
     <string>&amp;Dim Lights</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+D</string>
-   </property>
   </action>
   <action name="actionShow_Command_Line_2">
    <property name="checkable">
@@ -1467,9 +1404,6 @@ QSlider::handle:horizontal {
   <action name="actionOnline_Help">
    <property name="text">
     <string>Online &amp;Help</string>
-   </property>
-   <property name="shortcut">
-    <string>F1</string>
    </property>
   </action>
   <action name="action_Check_for_Updates">
@@ -1491,40 +1425,25 @@ QSlider::handle:horizontal {
    <property name="text">
     <string>To &amp;Current Size</string>
    </property>
-   <property name="shortcut">
-    <string>Alt+1</string>
-   </property>
   </action>
   <action name="action50">
    <property name="text">
     <string>50%</string>
-   </property>
-   <property name="shortcut">
-    <string>Alt+2</string>
    </property>
   </action>
   <action name="action75">
    <property name="text">
     <string>75%</string>
    </property>
-   <property name="shortcut">
-    <string>Alt+3</string>
-   </property>
   </action>
   <action name="action100">
    <property name="text">
     <string>100%</string>
    </property>
-   <property name="shortcut">
-    <string>Alt+4</string>
-   </property>
   </action>
   <action name="action200">
    <property name="text">
     <string>200%</string>
-   </property>
-   <property name="shortcut">
-    <string>Alt+5</string>
    </property>
   </action>
   <action name="action_Auto_Detect">
@@ -1567,16 +1486,10 @@ QSlider::handle:horizontal {
    <property name="text">
     <string>&amp;Size +</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl++</string>
-   </property>
   </action>
   <action name="actionS_ize">
    <property name="text">
     <string>S&amp;ize -</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+-</string>
    </property>
   </action>
   <action name="action_Reset_Size">
@@ -1669,40 +1582,25 @@ QSlider::handle:horizontal {
    <property name="text">
     <string>Show D&amp;ebug Output</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+E</string>
-   </property>
   </action>
   <action name="action_Increase_Volume">
    <property name="text">
     <string>&amp;Increase Volume</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Up</string>
    </property>
   </action>
   <action name="action_Decrease_Volume">
    <property name="text">
     <string>&amp;Decrease Volume</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+Down</string>
-   </property>
   </action>
   <action name="actionWith_Subtitles">
    <property name="text">
     <string>With &amp;Subtitles...</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+T</string>
-   </property>
   </action>
   <action name="actionWithout_Subtitles">
    <property name="text">
     <string>&amp;Without Subtitles...</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+T</string>
    </property>
   </action>
   <action name="action_Preferences">
@@ -1722,24 +1620,15 @@ QSlider::handle:horizontal {
    <property name="text">
     <string>&amp;Increase</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+Up</string>
-   </property>
   </action>
   <action name="action_Decrease">
    <property name="text">
     <string>&amp;Decrease</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+Down</string>
-   </property>
   </action>
   <action name="action_Reset">
    <property name="text">
     <string>&amp;Reset</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+R</string>
    </property>
   </action>
   <action name="action_none_4">

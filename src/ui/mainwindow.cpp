@@ -1,3 +1,4 @@
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -554,26 +555,6 @@ MainWindow::MainWindow(QWidget *parent):
                 mpv->Seek(((double)i/ui->seekBar->maximum())*mpv->getFileInfo().length);
             });
 
-    connect(ui->openButton, &OpenButton::LeftClick,                     // Playback: Open button (left click)
-            [=]
-            {
-                OpenFile();
-            });
-
-    connect(ui->openButton, &OpenButton::MiddleClick,                   // Playback: Open button (middle click)
-            [=]
-            {
-                int time = JumpDialog::getTime(mpv->getFileInfo().length,this);
-                if(time >= 0)
-                    mpv->Seek(time);
-            });
-
-    connect(ui->openButton, &OpenButton::RightClick,                    // Playback: Open button (right click)
-            [=]
-            {
-                mpv->LoadFile(LocationDialog::getUrl(mpv->getPath()+mpv->getFile(), this));
-            });
-
     connect(ui->remainingLabel, &CustomLabel::clicked,                  // Playback: Remaining Label
             [=]
             {
@@ -586,29 +567,17 @@ MainWindow::MainWindow(QWidget *parent):
                     setRemaining(true);
             });
 
-    connect(ui->rewindButton, &QPushButton::clicked,                    // Playback: Rewind button
-            [=]
-            {
-                mpv->Rewind();
-            });
+    connect(ui->rewindButton, SIGNAL(clicked()),                        // Playback: Rewind button
+            this, SLOT(HandleRewind()));
 
-    connect(ui->previousButton, &IndexButton::clicked,                  // Playback: Previous button
-            [=]
-            {
-                mpv->PlayFile(ui->playlistWidget->PreviousItem());
-            });
+    connect(ui->previousButton, SIGNAL(clicked()),                      // Playback: Previous button
+            this, SLOT(HandlePlayPrevious()));
 
-    connect(ui->playButton, &QPushButton::clicked,                      // Playback: Play/pause button
-            [=]
-            {
-                mpv->PlayPause(ui->playlistWidget->CurrentItem());
-            });
+    connect(ui->playButton, SIGNAL(clicked()),                          // Playback: Play/pause button
+            this, SLOT(HandlePlayPause()));
 
-    connect(ui->nextButton, &IndexButton::clicked,                      // Playback: Next button
-            [=]
-            {
-                mpv->PlayFile(ui->playlistWidget->NextItem());
-            });
+    connect(ui->nextButton, SIGNAL(clicked()),                          // Playback: Next button
+            this, SLOT(HandlePlayNext()));
 
     connect(ui->volumeSlider, &CustomSlider::valueChanged,              // Playback: Volume slider adjusted
             [=](int i)
@@ -619,7 +588,6 @@ MainWindow::MainWindow(QWidget *parent):
     connect(ui->playlistButton, &QPushButton::clicked,                  // Playback: Clicked the playlist button
             [=]
             {
-                // if the position is 0, playlist is hidden so show it
                 ShowPlaylist(!ui->splitter->position());
             });
 
@@ -753,64 +721,38 @@ MainWindow::MainWindow(QWidget *parent):
     connect(ui->inputLineEdit, &CustomLineEdit::submitted,
             [=](QString s)
             {
-                mpv->CommandString(s);
+                ExecuteCommand(s);
                 ui->inputLineEdit->setText("");
             });
                                                                         // File ->
-    connect(ui->action_New_Player, &QAction::triggered,                 // File -> New Player
-            [=]
-            {
-                QProcess *p = new QProcess(0);
-                p->startDetached(QApplication::applicationFilePath());
-                delete p;
-            });
+    connect(ui->action_New_Player, SIGNAL(triggered()),                 // File -> New Player
+            this, SLOT(HandleNewPlayer()));
 
-    connect(ui->action_Open_File, &QAction::triggered,                  // File -> Open File
-            [=]
-            {
-                OpenFile();
-            });
+    connect(ui->action_Open_File, SIGNAL(triggered()),                  // File -> Open File
+            this, SLOT(HandleOpenFileDialog()));
 
-    connect(ui->actionOpen_URL, &QAction::triggered,                    // File -> Open URL
-            [=]
-            {
-                mpv->LoadFile(LocationDialog::getUrl(mpv->getPath()+mpv->getFile(), this));
-            });
+    connect(ui->actionOpen_URL, SIGNAL(triggered()),                    // File -> Open URL
+            this, SLOT(HandleOpenURLDialog()));
 
-    connect(ui->actionOpen_Path_from_Clipboard, &QAction::triggered,    // File -> Open Path from Clipboard
-            [=]
-            {
-                mpv->LoadFile(QApplication::clipboard()->text());
-            });
+    connect(ui->actionOpen_Path_from_Clipboard, SIGNAL(triggered()),    // File -> Open Path from Clipboard
+            this, SLOT(HandleOpenClipboard()));
 
-    connect(ui->actionShow_in_Folder, &QAction::triggered,              // File -> Show in Folder
-            [=]
-            {
-                QDesktopServices::openUrl("file:///"+QDir::toNativeSeparators(mpv->getPath()));
-            });
+    connect(ui->actionShow_in_Folder, SIGNAL(triggered()),              // File -> Show in Folder
+            this, SLOT(HandleShowInFolder()));
 
-    connect(ui->actionPlay_Next_File, &QAction::triggered,              // File -> Play Next File
-            [=]
-            {
-                mpv->PlayFile(ui->playlistWidget->NextItem());
-            });
+    connect(ui->actionPlay_Next_File, SIGNAL(triggered()),              // File -> Play Next File
+            this, SLOT(HandlePlayNext()));
 
-    connect(ui->actionPlay_Previous_File, &QAction::triggered,          // File -> Play Previous File
-            [=]
-            {
-                mpv->PlayFile(ui->playlistWidget->PreviousItem());
-            });
+    connect(ui->actionPlay_Previous_File, SIGNAL(triggered()),          // File -> Play Previous File
+            this, SLOT(HandlePlayPrevious()));
 
-    connect(ui->actionE_xit, &QAction::triggered,                       // File -> Exit
-            [=]
-            {
-                close();
-            });
+    connect(ui->actionE_xit, SIGNAL(triggered()),                       // File -> Exit
+            this, SLOT(HandleExit()));
                                                                         // View ->
     connect(ui->action_Full_Screen, &QAction::triggered,                // View -> Full Screen
             [=]
             {
-                FullScreen((windowState() & Qt::WindowFullScreen) == 0);
+                FullScreen(!isFullScreen());
             });
 
     connect(ui->actionWith_Subtitles, &QAction::triggered,              // View -> Take Screenshot -> With Subtitles
@@ -1053,46 +995,23 @@ MainWindow::MainWindow(QWidget *parent):
                 DimLights(b);
             });
 
-    connect(ui->actionShow_D_ebug_Output, &QAction::triggered,          // Settings -> Show Debug Output
-            [=](bool b)
-            {
-                setDebug(b);
-            });
+    connect(ui->actionShow_D_ebug_Output, SIGNAL(triggered()),          // Settings -> Show Debug Output
+            this, SLOT(setDebug(bool)));
 
-    connect(ui->action_Preferences, &QAction::triggered,                // Settings -> Preferences...
-            [=]
-            {
-                SaveSettings();
-                PreferencesDialog::showPreferences(settings, this);
-                LoadSettings();
-            });
+    connect(ui->action_Preferences, SIGNAL(triggered()),                // Settings -> Preferences...
+            this, SLOT(HandlePreferencesDialog()));
                                                                         // Help ->
-    connect(ui->actionOnline_Help, &QAction::triggered,                 // Help -> Online Help
-            [=]
-            {
-                QDesktopServices::openUrl(QUrl(tr("http://bakamplayer.u8sand.net/help.php")));
-            });
+    connect(ui->actionOnline_Help, SIGNAL(triggered()),                 // Help -> Online Help
+            this, SLOT(HandleOnlineHelp()));
 
-    connect(ui->action_Check_for_Updates, &QAction::triggered,          // Help -> Check for Updates
-            [=]
-            {
-                if(UpdateDialog::update(update, this) == QDialog::Accepted)
-                {
-                    // todo: close and finish update (overwrite self and restart)
-                }
-            });
+    connect(ui->action_Check_for_Updates, SIGNAL(triggered()),          // Help -> Check for Updates
+            this, SLOT(HandleUpdateDialog()));
 
-    connect(ui->actionAbout_Qt, &QAction::triggered,                    // Help -> About Qt
-            [=]
-            {
-                qApp->aboutQt();
-            });
+    connect(ui->actionAbout_Qt, SIGNAL(triggered()),                    // Help -> About Qt
+            this, SLOT(HandleAboutQtDialog()));
 
-    connect(ui->actionAbout_Baka_MPlayer, &QAction::triggered,          // Help -> About Baka MPlayer
-            [=]
-            {
-                AboutDialog::about(BAKA_MPLAYER_VERSION, this); // launch about dialog
-            });
+    connect(ui->actionAbout_Baka_MPlayer, SIGNAL(triggered()),          // Help -> About Baka MPlayer
+            this, SLOT(HandleAboutDialog()));
 
     // qApp
 
@@ -1130,49 +1049,6 @@ MainWindow::MainWindow(QWidget *parent):
                     setFocus();
                 });
     }
-
-    // keyboard shortcuts
-    action = new QAction(tr("Seek Forward"), this);
-    action->setShortcut(QKeySequence("Right"));
-    connect(action, &QAction::triggered,
-            [=]
-            {
-                mpv->Seek(5, true);
-            });
-    addAction(action);
-
-    action = new QAction(tr("Seek Backward"), this);
-    action->setShortcut(QKeySequence("Left"));
-    connect(action, &QAction::triggered,
-            [=]
-            {
-                mpv->Seek(-5, true);
-            });
-    addAction(action);
-
-    action = new QAction(tr("Exit Fullscreen/Boss Key"), this);
-    action->setShortcut(QKeySequence("Esc"));
-    connect(action, &QAction::triggered,
-            [=]
-            {
-                if(isFullScreen()) // in fullscreen mode, escape will exit fullscreen
-                    FullScreen(false);
-                else
-                {
-                    mpv->Pause();
-                    setWindowState(windowState() | Qt::WindowMinimized);
-                }
-            });
-    addAction(action);
-
-    // add multimedia shortcuts
-    ui->action_Play->setShortcuts({ui->action_Play->shortcut(), QKeySequence(Qt::Key_MediaPlay)});
-    ui->action_Stop->setShortcuts({ui->action_Stop->shortcut(), QKeySequence(Qt::Key_MediaStop)});
-    ui->actionPlay_Next_File->setShortcuts({ui->actionPlay_Next_File->shortcut(), QKeySequence(Qt::Key_MediaNext)});
-    ui->actionPlay_Previous_File->setShortcuts({ui->actionPlay_Previous_File->shortcut(), QKeySequence(Qt::Key_MediaPrevious)});
-//    ui->action_Increase_Volume->setShortcuts();
-//    ui->action_Decrease_Volume->setShortcuts();
-
     // set window geometry from settings: leave this out of settings so that preference dialog doesn't center/resize the window
     setGeometry(QStyle::alignedRect(Qt::LeftToRight,
                                     Qt::AlignCenter,
@@ -1195,17 +1071,49 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::Load(QString file)
+{
+    // load the settings here--the constructor has already been called
+    // this solves some issues with setting things before the constructor has ended
+    menuVisible = ui->menubar->isVisible(); // does the OS use a menubar? (appmenu doesn't)
+    LoadSettings();
+    mpv->LoadFile(file);
+}
+
 void MainWindow::LoadSettings()
 {
     if(settings)
     {
         QString version;
         if(settings->allKeys().length() == 0) // empty settings
-            version = "2.0.1"; // current version
+        {
+            version = "2.0.2"; // current version
+            WriteDefaultKeybindings();
+        }
         else
             version = settings->value("baka-mplayer/version", "1.9.9").toString(); // defaults to the first version without version info in settings
 
-        if(version == "2.0.1") // current version
+        if(version == "2.0.2") // current version
+        {
+            settings->beginGroup("baka-mplayer");
+            setOnTop(settings->value("onTop", "never").toString());
+            setAutoFit(settings->value("autoFit", 100).toInt());
+            sysTrayIcon->setVisible(settings->value("trayIcon", false).toBool());
+            setHidePopup(settings->value("hidePopup", false).toBool());
+            setRemaining(settings->value("remaining", true).toBool());
+            ui->splitter->setNormalPosition(settings->value("splitter", ui->splitter->max()*1.0/8).toInt());
+            setDebug(settings->value("debug", false).toBool());
+            ui->hideFilesButton->setChecked(!settings->value("showAll", true).toBool());
+            setScreenshotDialog(settings->value("screenshotDialog", true).toBool());
+            recent = settings->value("recent").toStringList();
+            maxRecent = settings->value("maxRecent", 5).toInt();
+            settings->endGroup();
+            UpdateRecentFiles();
+            LoadKeybindings();
+
+            mpv->LoadSettings(settings, version);
+        }
+        else if(version == "2.0.1")
         {
             settings->beginGroup("baka-mplayer");
             setOnTop(settings->value("onTop", "never").toString());
@@ -1223,6 +1131,11 @@ void MainWindow::LoadSettings()
             UpdateRecentFiles();
 
             mpv->LoadSettings(settings, version);
+
+            settings->clear();
+            SaveSettings();
+            WriteDefaultKeybindings();
+            LoadKeybindings();
         }
         else if(version == "2.0.0")
         {
@@ -1247,6 +1160,8 @@ void MainWindow::LoadSettings()
 
             settings->clear();
             SaveSettings();
+            WriteDefaultKeybindings();
+            LoadKeybindings();
         }
         else if(version == "1.9.9")
         {
@@ -1276,10 +1191,12 @@ void MainWindow::LoadSettings()
 
             settings->clear();
             SaveSettings();
+            WriteDefaultKeybindings();
+            LoadKeybindings();
         }
         else // unrecognized version (newer)
         {
-            version = "2.0.1"; // load what we can assuming the settings are like the current version
+            version = "2.0.2"; // load what we can assuming the settings are like the current version
 
             settings->beginGroup("baka-mplayer");
             setOnTop(settings->value("onTop", "never").toString());
@@ -1295,6 +1212,7 @@ void MainWindow::LoadSettings()
             maxRecent = settings->value("maxRecent", 5).toInt();
             settings->endGroup();
             UpdateRecentFiles();
+            LoadKeybindings();
 
             mpv->LoadSettings(settings, version);
 
@@ -1332,18 +1250,119 @@ void MainWindow::SaveSettings()
         settings->setValue("debug", debug);
         settings->setValue("recent", recent);
         settings->setValue("maxRecent", maxRecent);
-        settings->setValue("version", "2.0.1");
+        settings->setValue("version", "2.0.2");
         settings->endGroup();
     }
 }
 
-void MainWindow::Load(QString file)
+void MainWindow::LoadKeybindings()
 {
-    // load the settings here--the constructor has already been called
-    // this solves some issues with setting things before the constructor has ended
-    menuVisible = ui->menubar->isVisible(); // does the OS use a menubar? (appmenu doesn't)
-    LoadSettings();
-    mpv->LoadFile(file);
+    settings->beginGroup("input");
+    QStringList keys = settings->allKeys();
+    QString command;
+    for(auto &key : keys)
+    {
+        command = settings->value(key).toString();
+        if(key == "OpenLeftClick")
+        {
+            connect(ui->openButton, &OpenButton::LeftClick,
+                    [=] { ExecuteCommand(command); });
+        }
+        else if(key == "OpenMiddleClick")
+        {
+            connect(ui->openButton, &OpenButton::MiddleClick,
+                    [=] { ExecuteCommand(command); });
+        }
+        else if(key == "OpenRightClick")
+        {
+            connect(ui->openButton, &OpenButton::RightClick,
+                    [=] { ExecuteCommand(command); });
+        }
+        else if(key == "ScrollUp")
+        {
+            // TODO
+        }
+        else if(key == "ScrollDown")
+        {
+            // TODO
+        }
+        else if(key == "FrameLeftClick" ||
+                key == "FrameDoubleClick" ||
+                key == "FrameRightClick" ||
+                key == "FrameMiddleClick")
+        {
+            input[key] = command;
+        }
+        else
+        {
+            QAction *action = new QAction(this);
+            action->setShortcut(QKeySequence(key));
+            connect(action, &QAction::triggered,
+                    [=] { ExecuteCommand(command); });
+            addAction(action);
+        }
+    }
+    settings->endGroup();
+}
+
+void MainWindow::WriteDefaultKeybindings()
+{
+    QVector<QPair<QString, QString>> keybindings = {
+        {"OpenLeftClick", "baka open_file_dialog"},
+        {"OpenMiddleClick", "baka jump_dialog"},
+        {"OpenRightClick", "baka open_url_dialog"},
+        {"ScrollUp", "mpv add volume 1"},
+        {"ScrollDown", "mpv add volume -1"},
+        {"FrameLeftClick", "baka move"},
+        {"FrameDoubleClick", "baka toggle fullscreen"},
+        {"FrameRightClick", "baka play_pause"},
+        {"Ctrl+N", "baka new_player"},
+        {"Ctrl+O", "baka open_file_dialog"},
+        {"Ctrl+U", "baka open_url_dialog"},
+        {"Ctrl+V", "baka open_clipboard"},
+        {"Ctrl+Z", "baka open_recent 0"},
+        {"Ctrl+F", "baka show_in_folder"},
+        {"Ctrl+Left", "baka play_next"},
+        {"Ctrl+Right", "baka play_previous"},
+        {"Ctrl+Q", "baka exit"},
+        {"Alt+Return", "baka toggle fullscreen"},
+        {"Ctrl+W", "mpv toggle sub-visibility"},
+        {"Ctrl+I", "baka media_info_dialog"},
+        {"Space", "baka play_pause"},
+        {"Ctrl+S", "baka stop"},
+        {"Ctrl+R", "mpv set time-pos 0"},
+        {"PgDown", "mpv add chapter 1"},
+        {"PgUp", "mpv add chapter -1"},
+        {"Shift+Right", "mpv frame_step"},
+        {"Shift+Left", "mpv frame_back_step"},
+        {"Ctrl+J", "baka jump_dialog"},
+        {"Ctrl+X", "baka toggle playlist"},
+        {"Ctrl+D", "baka toggle dim_lights"},
+        {"F1", "baka online_help"},
+        {"Alt+1", "baka auto_fit 0"},
+        {"Alt+2", "baka auto_fit 50"},
+        {"Alt+3", "baka auto_fit 75"},
+        {"Alt+4", "baka auto_fit 100"},
+        {"Alt+5", "baka auto_fit 200"},
+        {"Ctrl++", "mpv add sub-scale 0.02"},
+        {"Ctrl+-", "mpv add sub-scale -0.02"},
+        {"Ctrl+E", "baka toggle debug"},
+        {"Ctrl+Up", "mpv add volume 5"},
+        {"Ctrl+Down", "mpv add volume -5"},
+        {"Ctrl+T", "mpv screenshot subtitles"},
+        {"Ctrl+Shift+T", "mpv screenshot video"},
+        {"Ctrl+Shift+Up", "mpv add speed 0.25"},
+        {"Ctrl+Shift+Down", "mpv add speed -0.25"},
+        {"Ctrl+Shift+R", "mpv set speed 1"},
+        {"Left", "mpv seek 5"},
+        {"Right", "mpv seek -5"},
+        {"Esc", "baka boss"}
+    };
+
+    settings->beginGroup("input");
+    for(auto &binding : keybindings)
+        settings->setValue(binding.first, binding.second);
+    settings->endGroup();
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent *event)
@@ -1371,19 +1390,15 @@ void MainWindow::dropEvent(QDropEvent *event)
 
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
-    if(!isFullScreen())
+    if(ui->mpvFrame->rect().contains(event->pos())) // mouse is in the mpvFrame
     {
-        if(event->button() == Qt::LeftButton && !moveTimer)
-        {
-            moveTimer = new QElapsedTimer();
-            moveTimer->start();
-            origPos = pos();
-            lastMousePos = event->globalPos();
-        }
-        else if(event->button() == Qt::RightButton &&
-                mpv->getPlayState() > 0 &&  // if playing
-                ui->mpvFrame->rect().contains(event->pos())) // mouse is in the mpvFrame
-            mpv->PlayPause(ui->playlistWidget->CurrentItem());
+        lastMousePos = event->globalPos();
+        if(event->button() == Qt::LeftButton)
+            ExecuteCommand(input["FrameLeftClick"]);
+        else if(event->button() == Qt::RightButton)
+            ExecuteCommand(input["FrameRightClick"]);
+        else if(event->button() == Qt::MiddleButton)
+            ExecuteCommand(input["FrameMiddleClick"]);
     }
     QMainWindow::mousePressEvent(event);
 }
@@ -1452,10 +1467,7 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent *event)
 {
     if(event->button() == Qt::LeftButton && ui->mpvFrame->geometry().contains(event->pos())) // if mouse is in the mpvFrame
     {
-        if(!isFullScreen() && ui->action_Full_Screen->isEnabled()) // don't allow people to go full screen if they shouldn't be able to
-            FullScreen(true);
-        else // they can leave fullscreen even if it's disabled (eg. video ends while in full screen)
-            FullScreen(false);
+        ExecuteCommand(input["FrameDoubleClick"]);
         event->accept();
     }
     QMainWindow::mouseDoubleClickEvent(event);
@@ -1718,13 +1730,11 @@ void MainWindow::UpdateRecentFiles()
 {
     ui->menu_Recently_Opened->clear();
     QAction *action;
-    int n = 1,
+    int n = 0,
         N = recent.length();
     for(auto &f : recent)
     {
-        action = ui->menu_Recently_Opened->addAction(tr("%0. %1").arg(FormatNumberWithAmpersand(n, N), ShortenPathToParent(f).replace("&","&&")));
-        if(n++ == 1)
-            action->setShortcut(QKeySequence("Ctrl+Z"));
+        action = ui->menu_Recently_Opened->addAction(tr("%0. %1").arg(FormatNumberWithAmpersand(++n, N), ShortenPathToParent(f).replace("&","&&")));
         connect(action, &QAction::triggered,
                 [=]
                 {
@@ -1733,7 +1743,157 @@ void MainWindow::UpdateRecentFiles()
     }
 }
 
-void MainWindow::OpenFile()
+void MainWindow::OpenRecent(int index)
+{
+    if(recent.length() > index)
+        mpv->LoadFile(recent[index]);
+}
+
+void MainWindow::BakaOutput(QString output)
+{
+    ui->outputTextEdit->moveCursor(QTextCursor::End);
+    ui->outputTextEdit->insertPlainText(tr("[baka]: %0").arg(output));
+}
+
+void MainWindow::ExecuteCommand(QString command)
+{
+    if(command == QString())
+        return;
+
+    QStringList cmdList = command.split(" ");
+    if(cmdList[0] == "baka")
+    {
+        cmdList.pop_front();
+        HandleBakaCommand(cmdList);
+    }
+    else if(cmdList[0] == "mpv")
+    {
+        cmdList.pop_front();
+        mpv->CommandString(cmdList.join(" "));
+    }
+    else
+        HandleInvalidCommand(command);
+}
+
+void MainWindow::HandleBakaCommand(QStringList cmdList)
+{
+    if(cmdList.length() == 1)
+    {
+        if(cmdList[0] == "play_pause")                      HandlePlayPause();
+        else if(cmdList[0] == "play_next")                  HandlePlayNext();
+        else if(cmdList[0] == "play_previous")              HandlePlayPrevious();
+        else if(cmdList[0] == "rewind")                     HandleRewind();
+        else if(cmdList[0] == "stop")                       HandleStop();
+        else if(cmdList[0] == "move")                       HandleMove();
+        else if(cmdList[0] == "boss")                       HandleBoss();
+        else if(cmdList[0] == "open_file_dialog")           HandleOpenFileDialog();
+        else if(cmdList[0] == "open_url_dialog")            HandleOpenURLDialog();
+        else if(cmdList[0] == "open_clipboard")             HandleOpenClipboard();
+        else if(cmdList[0] == "jump_dialog")                HandleJumpDialog();
+        else if(cmdList[0] == "show_in_folder")             HandleShowInFolder();
+        else if(cmdList[0] == "new_player")                 HandleNewPlayer();
+        else if(cmdList[0] == "media_info_dialog")          HandleMediaInfoDialog();
+        else if(cmdList[0] == "media_preferences_dialog")   HandlePreferencesDialog();
+        else if(cmdList[0] == "media_update_dialog")        HandleUpdateDialog();
+        else if(cmdList[0] == "online_help")                HandleOnlineHelp();
+        else if(cmdList[0] == "about_dialog")               HandleAboutDialog();
+        else if(cmdList[0] == "about_qt_dialog")            HandleAboutQtDialog();
+        else if(cmdList[0] == "exit")                       HandleExit();
+        else                                                HandleInvalidCommand(cmdList[0]);
+    }
+    else if(cmdList.length() == 2)
+    {
+        if(cmdList[0] == "toggle")
+        {
+            if(cmdList[1] == "fullscreen")                  FullScreen(!isFullScreen());
+            else if(cmdList[1] == "playlist")               ShowPlaylist(!ui->splitter->position());
+            else if(cmdList[1] == "dim_lights")             DimLights(!dimDialog->isVisible());
+            else if(cmdList[1] == "debug")                  setDebug(!debug);
+            else                                            HandleInvalidParameter(cmdList[1]);
+        }
+        else if(cmdList[0] == "get")
+        {
+            if(cmdList[1] == "fullscreen")                  BakaOutput(QString::number(isFullScreen()));
+            else if(cmdList[1] == "playlist")               BakaOutput(QString::number(ui->splitter->position()!=0));
+            else if(cmdList[1] == "dim_lights")             BakaOutput(QString::number(dimDialog->isVisible()));
+            else if(cmdList[1] == "debug")                  BakaOutput(QString::number(debug));
+            else                                            HandleInvalidParameter(cmdList[1]);
+        }
+        else if(cmdList[0] == "auto_fit")                   FitWindow(cmdList[1].toInt(), true);
+        else if(cmdList[0] == "open_recent")                OpenRecent(cmdList[1].toInt());
+        else                                                HandleInvalidCommand(cmdList[0]+" "+cmdList[1]);
+    }
+    else if(cmdList.length() == 3)
+    {
+        if(cmdList[0] == "set")
+        {
+            if(cmdList[1] == "fullscreen")                  FullScreen((bool)cmdList[2].toInt());
+            else if(cmdList[1] == "playlist")               ShowPlaylist((bool)cmdList[2].toInt());
+            else if(cmdList[1] == "dim_lights")             DimLights((bool)cmdList[2].toInt());
+            else if(cmdList[1] == "debug")                  setDebug((bool)cmdList[2].toInt());
+            else                                            HandleInvalidParameter(cmdList[1]);
+        }
+        else                                                HandleInvalidCommand(cmdList[0]+" "+cmdList[1]+" "+cmdList[2]);
+    }
+    else
+        HandleInvalidCommand(cmdList.join(' '));
+}
+
+void MainWindow::HandleInvalidCommand(QString command)
+{
+    BakaOutput(tr("invalid command '%0'\n").arg(command));
+}
+
+void MainWindow::HandleInvalidParameter(QString parameter)
+{
+    BakaOutput(tr("invalid parameter '%0'\n").arg(parameter));
+}
+
+void MainWindow::HandlePlayPause()
+{
+    if(mpv->getPlayState() > 0)
+        mpv->PlayPause(ui->playlistWidget->CurrentItem());
+}
+
+void MainWindow::HandlePlayNext()
+{
+    mpv->PlayFile(ui->playlistWidget->NextItem());
+}
+
+void MainWindow::HandlePlayPrevious()
+{
+    mpv->PlayFile(ui->playlistWidget->PreviousItem());
+}
+
+void MainWindow::HandleRewind()
+{
+    mpv->Rewind();
+}
+
+void MainWindow::HandleStop()
+{
+    mpv->Stop();
+}
+
+void MainWindow::HandleMove()
+{
+    if(!isFullScreen() && !moveTimer)
+    {
+        moveTimer = new QElapsedTimer();
+        moveTimer->start();
+        origPos = pos();
+    }
+}
+
+void MainWindow::HandleBoss()
+{
+    mpv->Pause();
+    if(isFullScreen())
+        FullScreen(false);
+    setWindowState(windowState() | Qt::WindowMinimized);
+}
+
+void MainWindow::HandleOpenFileDialog()
 {
     mpv->LoadFile(QFileDialog::getOpenFileName(this,
                    tr("Open File"),mpv->getPath(),
@@ -1741,4 +1901,73 @@ void MainWindow::OpenFile()
                    tr("Video Files (%0);;").arg(Mpv::video_filetypes.join(" "))+
                    tr("Audio Files (%0)").arg(Mpv::audio_filetypes.join(" ")),
                    0, QFileDialog::DontUseSheet));
+}
+
+void MainWindow::HandleOpenURLDialog()
+{
+    mpv->LoadFile(LocationDialog::getUrl(mpv->getPath()+mpv->getFile(), this));
+}
+
+void MainWindow::HandleOpenClipboard()
+{
+    mpv->LoadFile(QApplication::clipboard()->text());
+}
+
+void MainWindow::HandleJumpDialog()
+{
+    int time = JumpDialog::getTime(mpv->getFileInfo().length,this);
+    if(time >= 0)
+        mpv->Seek(time);
+}
+
+void MainWindow::HandleShowInFolder()
+{
+    QDesktopServices::openUrl("file:///"+QDir::toNativeSeparators(mpv->getPath()));
+}
+
+void MainWindow::HandleNewPlayer()
+{
+    QProcess *p = new QProcess(0);
+    p->startDetached(QApplication::applicationFilePath());
+    delete p;
+}
+
+void MainWindow::HandleMediaInfoDialog()
+{
+    InfoDialog::info(mpv->getPath()+mpv->getFile(), mpv->getFileInfo(), this);
+}
+
+void MainWindow::HandlePreferencesDialog()
+{
+    SaveSettings();
+    PreferencesDialog::showPreferences(settings, this);
+    LoadSettings();
+}
+
+void MainWindow::HandleUpdateDialog()
+{
+    if(UpdateDialog::update(update, this) == QDialog::Accepted)
+    {
+        // todo: close and finish update (overwrite self and restart)
+    }
+}
+
+void MainWindow::HandleOnlineHelp()
+{
+    QDesktopServices::openUrl(QUrl(tr("http://bakamplayer.u8sand.net/help.php")));
+}
+
+void MainWindow::HandleAboutDialog()
+{
+    AboutDialog::about(BAKA_MPLAYER_VERSION, this);
+}
+
+void MainWindow::HandleAboutQtDialog()
+{
+    qApp->aboutQt();
+}
+
+void MainWindow::HandleExit()
+{
+    close();
 }

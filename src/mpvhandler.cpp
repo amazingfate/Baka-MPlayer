@@ -127,7 +127,7 @@ void MpvHandler::LoadSettings(QSettings *settings, QString version)
 {
     if(settings)
     {
-        if(version == "2.0.1" || version == "2.0.0")
+        if(version == "2.0.2" || version == "2.0.1" || version == "2.0.0")
         {
             Debug(settings->value("baka-mplayer/debug", false).toBool());
 
@@ -168,7 +168,7 @@ void MpvHandler::LoadSettings(QSettings *settings, QString version)
                     else if(tmp.type() == QVariant::Double)
                         tmp2 = QString::number(tmp.toDouble()).toUtf8();
                     else
-                        emit messageSignal(tr("[Baka-MPlayer]: Setting type was parsed as %0\n").arg(tmp.type()));
+                        emit messageSignal(tr("[baka]: Setting type was parsed as %0\n").arg(tmp.type()));
 
                     if(tmp2 != QByteArray())
                         mpv_set_option_string(mpv, tmp1.constData(), tmp2.constData());

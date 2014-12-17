@@ -5,6 +5,7 @@
 #include <QSystemTrayIcon>
 #include <QSignalMapper>
 #include <QSettings>
+#include <QMap>
 #include <QModelIndex>
 #include <QStringList>
 #include <QMouseEvent>
@@ -33,6 +34,8 @@ public:
 protected:
     void LoadSettings();
     void SaveSettings();
+    void LoadKeybindings();                         // setup the keybindings from settings
+    void WriteDefaultKeybindings();                 // setup the baka-mplayer default keybindings
 
     void dragEnterEvent(QDragEnterEvent *event);    // drag file into
     void dropEvent(QDropEvent *event);              // drop file into
@@ -56,7 +59,35 @@ private slots:
     void TakeScreenshot(bool subs);                 // take a screenshot
     void ShowScreenshotMessage(bool subs);          // show the screenshot status message
     void UpdateRecentFiles();                       // populate recentFiles menu
-    void OpenFile();                                // open file dialog
+
+    void OpenRecent(int index);                     // loads the file from recent files
+    void BakaOutput(QString output);                // handles message output for [baka]
+    void ExecuteCommand(QString command);           // drives the command engine
+    void HandleBakaCommand(QStringList cmdList);    // handles commands that begin with baka
+    void HandleInvalidCommand(QString command);
+    void HandleInvalidParameter(QString parameter);
+
+    // command functionality
+    void HandlePlayPause();
+    void HandlePlayNext();
+    void HandlePlayPrevious();
+    void HandleRewind();
+    void HandleStop();
+    void HandleMove();
+    void HandleBoss();
+    void HandleOpenFileDialog();
+    void HandleOpenURLDialog();
+    void HandleOpenClipboard();
+    void HandleJumpDialog();
+    void HandleShowInFolder();
+    void HandleNewPlayer();
+    void HandleMediaInfoDialog();
+    void HandlePreferencesDialog();
+    void HandleUpdateDialog();
+    void HandleOnlineHelp();
+    void HandleAboutDialog();
+    void HandleAboutQtDialog();
+    void HandleExit();
 
 private:
     Ui::MainWindow  *ui;
@@ -78,6 +109,7 @@ private:
     DimDialog       *dimDialog;
 
     // variables
+    QMap<QString, QString> input;
     QStringList recent;
     QString onTop;
     int autoFit,
