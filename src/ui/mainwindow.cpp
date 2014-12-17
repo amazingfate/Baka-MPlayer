@@ -1258,9 +1258,8 @@ void MainWindow::SaveSettings()
 void MainWindow::LoadKeybindings()
 {
     settings->beginGroup("input");
-    QStringList keys = settings->allKeys();
     QString command;
-    for(auto &key : keys)
+    for(auto &key : settings->childKeys())
     {
         command = settings->value(key).toString();
         if(key == "OpenLeftClick")
@@ -1280,18 +1279,33 @@ void MainWindow::LoadKeybindings()
         }
         else if(key == "ScrollUp")
         {
-            // TODO
+            connect(this, &MainWindow::ScrollUp,
+                    [=] { ExecuteCommand(command); });
         }
         else if(key == "ScrollDown")
         {
-            // TODO
+            connect(this, &MainWindow::ScrollDown,
+                    [=] { ExecuteCommand(command); });
         }
-        else if(key == "FrameLeftClick" ||
-                key == "FrameDoubleClick" ||
-                key == "FrameRightClick" ||
-                key == "FrameMiddleClick")
+        else if(key == "FrameLeftClick")
         {
-            input[key] = command;
+            connect(this, &MainWindow::FrameLeftClick,
+                    [=] { ExecuteCommand(command); });
+        }
+        else if(key == "FrameMiddleClick")
+        {
+            connect(this, &MainWindow::FrameMiddleClick,
+                    [=] { ExecuteCommand(command); });
+        }
+        else if(key == "FrameRightClick")
+        {
+            connect(this, &MainWindow::FrameRightClick,
+                    [=] { ExecuteCommand(command); });
+        }
+        else if(key == "FrameDoubleClick")
+        {
+            connect(this, &MainWindow::FrameDoubleClick,
+                    [=] { ExecuteCommand(command); });
         }
         else
         {
@@ -1311,8 +1325,8 @@ void MainWindow::WriteDefaultKeybindings()
         {"OpenLeftClick", "baka open_file_dialog"},
         {"OpenMiddleClick", "baka jump_dialog"},
         {"OpenRightClick", "baka open_url_dialog"},
-        {"ScrollUp", "mpv add volume 1"},
-        {"ScrollDown", "mpv add volume -1"},
+        {"ScrollUp", "mpv add volume 5"},
+        {"ScrollDown", "mpv add volume -5"},
         {"FrameLeftClick", "baka move"},
         {"FrameDoubleClick", "baka toggle fullscreen"},
         {"FrameRightClick", "baka play_pause"},
@@ -1322,8 +1336,8 @@ void MainWindow::WriteDefaultKeybindings()
         {"Ctrl+V", "baka open_clipboard"},
         {"Ctrl+Z", "baka open_recent 0"},
         {"Ctrl+F", "baka show_in_folder"},
-        {"Ctrl+Left", "baka play_next"},
-        {"Ctrl+Right", "baka play_previous"},
+        {"Ctrl+Right", "baka play_next"},
+        {"Ctrl+Left", "baka play_previous"},
         {"Ctrl+Q", "baka exit"},
         {"Alt+Return", "baka toggle fullscreen"},
         {"Ctrl+W", "mpv toggle sub-visibility"},
@@ -1394,11 +1408,11 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
     {
         lastMousePos = event->globalPos();
         if(event->button() == Qt::LeftButton)
-            ExecuteCommand(input["FrameLeftClick"]);
+            emit FrameLeftClick();
         else if(event->button() == Qt::RightButton)
-            ExecuteCommand(input["FrameRightClick"]);
+            emit FrameRightClick();
         else if(event->button() == Qt::MiddleButton)
-            ExecuteCommand(input["FrameMiddleClick"]);
+            emit FrameMiddleClick();
     }
     QMainWindow::mousePressEvent(event);
 }
@@ -1467,10 +1481,19 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent *event)
 {
     if(event->button() == Qt::LeftButton && ui->mpvFrame->geometry().contains(event->pos())) // if mouse is in the mpvFrame
     {
-        ExecuteCommand(input["FrameDoubleClick"]);
+        emit FrameDoubleClick();
         event->accept();
     }
     QMainWindow::mouseDoubleClickEvent(event);
+}
+
+void MainWindow::wheelEvent(QWheelEvent *event)
+{
+    if(event->delta() > 0)
+        emit ScrollUp();
+    else
+        emit ScrollDown();
+    QMainWindow::wheelEvent(event);
 }
 
 void MainWindow::SetPlaybackControls(bool enable)
@@ -1789,6 +1812,7 @@ void MainWindow::HandleBakaCommand(QStringList cmdList)
         else if(cmdList[0] == "open_file_dialog")           HandleOpenFileDialog();
         else if(cmdList[0] == "open_url_dialog")            HandleOpenURLDialog();
         else if(cmdList[0] == "open_clipboard")             HandleOpenClipboard();
+        else if(cmdList[0] == "open_last")                  HandleOpenLast();
         else if(cmdList[0] == "jump_dialog")                HandleJumpDialog();
         else if(cmdList[0] == "show_in_folder")             HandleShowInFolder();
         else if(cmdList[0] == "new_player")                 HandleNewPlayer();
@@ -1911,6 +1935,17 @@ void MainWindow::HandleOpenURLDialog()
 void MainWindow::HandleOpenClipboard()
 {
     mpv->LoadFile(QApplication::clipboard()->text());
+}
+
+void MainWindow::HandleOpenLast()
+{
+    if(recent.length() > 0)
+    {
+        if(recent[0] == mpv->getPath()+mpv->getFile())
+            OpenRecent(1);
+        else
+            OpenRecent(0);
+    }
 }
 
 void MainWindow::HandleJumpDialog()

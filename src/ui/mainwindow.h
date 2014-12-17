@@ -9,6 +9,7 @@
 #include <QModelIndex>
 #include <QStringList>
 #include <QMouseEvent>
+#include <QWheelEvent>
 #include <QEvent>
 #include <QPoint>
 #include <QTimer>
@@ -43,6 +44,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event);     // released mouse up
     void mouseMoveEvent(QMouseEvent *event);        // moved mouse on the form
     void mouseDoubleClickEvent(QMouseEvent *event); // double clicked the form
+    void wheelEvent(QWheelEvent *event);            // the mouse wheel is used
     bool eventFilter(QObject *obj, QEvent *event);  // event filter (get mouse move events from mpvFrame)
 
     void SetPlaybackControls(bool enable);          // macro to enable/disable playback controls
@@ -78,6 +80,7 @@ private slots:
     void HandleOpenFileDialog();
     void HandleOpenURLDialog();
     void HandleOpenClipboard();
+    void HandleOpenLast();
     void HandleJumpDialog();
     void HandleShowInFolder();
     void HandleNewPlayer();
@@ -109,7 +112,6 @@ private:
     DimDialog       *dimDialog;
 
     // variables
-    QMap<QString, QString> input;
     QStringList recent;
     QString onTop;
     int autoFit,
@@ -134,6 +136,14 @@ signals:
     void remainingChanged(bool);
     void screenshotDialogChanged(bool);
     void debugChanged(bool);
+
+
+    void ScrollUp();
+    void ScrollDown();
+    void FrameLeftClick();
+    void FrameMiddleClick();
+    void FrameRightClick();
+    void FrameDoubleClick();
 };
 
 #endif // MAINWINDOW_H
