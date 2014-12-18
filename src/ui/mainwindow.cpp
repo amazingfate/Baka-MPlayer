@@ -552,7 +552,7 @@ MainWindow::MainWindow(QWidget *parent):
     connect(ui->seekBar, &SeekBar::valueChanged,                        // Playback: Seekbar clicked
             [=](int i)
             {
-                mpv->Seek(((double)i/ui->seekBar->maximum())*mpv->getFileInfo().length);
+                mpv->Seek(mpv->Relative(((double)i/ui->seekBar->maximum())*mpv->getFileInfo().length), true);
             });
 
     connect(ui->remainingLabel, &CustomLabel::clicked,                  // Playback: Remaining Label
